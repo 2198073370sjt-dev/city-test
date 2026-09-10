@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>你最适合生活在哪座城市？</title>
+<style>
+  :root{
+    --bg:#f7f7f2;
+    --card:#ffffff;
+    --text:#262822;
+    --muted:#8f958b;
+    --soft:#f1f3ed;
+    --line:#75a66c;
+    --line-soft:#dce9d8;
+    --border:#e4e7df;
+    --deep:#30352e;
+    --shadow:0 14px 40px rgba(40,48,34,.08);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    min-height:100vh;
+  }
+  button{font:inherit}
+  .app{max-width:780px;margin:0 auto;min-height:100vh;padding:28px 22px 52px}
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:24px}
+  .kicker{font-family:Georgia,serif;letter-spacing:.2em;font-size:13px;color:#a5aaa1;line-height:1.75}
+  .progressText{font-family:Georgia,serif;letter-spacing:.16em;font-size:13px;color:#a5aaa1;white-space:nowrap}
+  .progress{height:3px;background:#e4e7e1;border-radius:999px;overflow:hidden;margin-top:9px;width:158px}
+  .progress>span{display:block;height:100%;background:var(--line);width:0;transition:width .35s ease}
+  .screen{display:none}
+  .screen.active{display:block;animation:fade .28s ease}
+  @keyframes fade{from{opacity:.3;transform:translateY(5px)}to{opacity:1;transform:none}}
+  .hero{padding:70px 0 32px}
+  .hero h1{font-weight:500;line-height:1.38;font-size:clamp(36px,7vw,58px);letter-spacing:.01em;margin:0 0 20px}
+  .hero p{font-size:16px;line-height:1.95;color:#686d64;max-width:630px;margin:0}
+  .accentLine{width:56px;height:3px;background:var(--line);margin:29px 0 32px;border-radius:4px}
+  .btnPrimary,.btnGhost{
+    border:0;border-radius:14px;min-height:52px;padding:0 22px;cursor:pointer;transition:.2s ease;
+  }
+  .btnPrimary{background:var(--deep);color:white;box-shadow:var(--shadow)}
+  .btnPrimary:hover{transform:translateY(-1px)}
+  .btnGhost{background:transparent;border:1px solid var(--border);color:#5d6259}
+  .meta{margin-top:18px;color:#a0a49c;font-size:13px;line-height:1.7}
+  .questionWrap{padding-top:22px}
+  .questionTitle{
+    font-size:clamp(28px,5.3vw,42px);font-weight:500;line-height:1.5;text-align:center;
+    margin:54px auto 0;max-width:690px;
+  }
+  .questionLine{width:56px;height:3px;background:var(--line);margin:28px auto 35px;border-radius:4px}
+  .options{display:grid;gap:12px;max-width:690px;margin:0 auto}
+  .option{
+    width:100%;text-align:left;border:1px solid transparent;background:transparent;color:#4f554c;
+    min-height:64px;padding:16px 18px;border-radius:15px;display:flex;gap:12px;align-items:flex-start;
+    cursor:pointer;transition:.2s ease;
+  }
+  .option:hover{background:#fff;border-color:var(--border)}
+  .option.selected{background:#fff;border-color:#a7c7a0;box-shadow:0 8px 24px rgba(40,50,35,.06)}
+  .letter{flex:0 0 26px;color:#3c4239;font-family:Georgia,serif;font-size:18px;line-height:1.7}
+  .optionText{font-size:17px;line-height:1.7}
+  .questionFooter{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:34px auto 0;max-width:690px}
+  .hint{font-size:13px;color:#aaaead}
+  .navBtns{display:flex;gap:10px}
+  .navBtns button{min-width:88px}
+
+  /* result */
+  .result{padding-top:12px}
+  .resultHeader{text-align:center;padding:30px 0 14px}
+  .resultLabel{color:var(--line);letter-spacing:.23em;font-size:13px}
+  .resultCity{font-size:clamp(56px,12vw,90px);font-weight:600;letter-spacing:.05em;margin:12px 0 0}
+  .resultTag{font-size:23px;margin-top:5px;color:#4e554a}
+  .tagline{font-size:14px;color:#8b9187;margin-top:8px;letter-spacing:.05em}
+  .scoreRing{
+    width:128px;height:128px;border-radius:50%;margin:28px auto 10px;
+    display:grid;place-items:center;background:conic-gradient(var(--line) calc(var(--score)*1%), #e2e6df 0);
+    position:relative;
+  }
+  .scoreRing::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--bg)}
+  .scoreRing strong{position:relative;z-index:1;font-size:29px}
+  .scoreRing span{font-size:12px;font-weight:400;color:#8b8f87;margin-left:2px}
+  .resultCopy{font-size:18px;line-height:2;color:#4f554c;max-width:680px;margin:24px auto 0;text-align:center}
+  .truthLine{
+    margin:22px auto 0;max-width:680px;padding:18px 20px;border-left:3px solid var(--line);
+    background:rgba(255,255,255,.64);border-radius:0 14px 14px 0;
+    font-size:17px;line-height:1.9;color:#3f453d;
+  }
+
+  .keywordWrap{display:flex;justify-content:center;flex-wrap:wrap;gap:9px;margin:25px auto 4px;max-width:680px}
+  .chip{padding:8px 13px;border:1px solid var(--line-soft);background:#fbfcfa;border-radius:999px;font-size:13px;color:#65705f}
+
+  .sectionTitle{font-size:20px;margin:0 0 16px;font-weight:650}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:21px;margin-top:18px}
+  .panel.soft{background:#fbfcf9}
+  .bars{display:grid;gap:14px}
+  .barRow{display:grid;grid-template-columns:76px 1fr 42px;align-items:center;gap:10px;font-size:14px;color:#646961}
+  .bar{height:8px;background:#eef0ec;border-radius:999px;overflow:hidden}
+  .bar span{display:block;height:100%;background:#7f9a78;border-radius:999px}
+  .insightGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .insight{
+    border:1px solid var(--border);border-radius:14px;padding:17px;background:#fff;min-width:0
+  }
+  .insight .mini{font-size:12px;color:#92978f;letter-spacing:.08em;margin-bottom:7px}
+  .insight strong{display:block;font-size:16px;line-height:1.55;margin-bottom:7px}
+  .insight p{margin:0;font-size:14px;line-height:1.75;color:#697067}
+  .evidence{display:grid;gap:11px}
+  .evidenceItem{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed #e7e9e3}
+  .evidenceItem:last-child{border-bottom:0;padding-bottom:0}
+  .evidenceNo{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:0 0 28px;background:var(--soft);color:#6b7765;font-size:12px}
+  .evidenceText{font-size:15px;line-height:1.75;color:#555c52}
+  .alts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .altCard{border:1px solid var(--border);border-radius:14px;padding:17px;background:#fbfcfa}
+  .altCard strong{display:block;font-size:18px;margin-bottom:7px}
+  .altCard small{display:block;color:#7a7f77;line-height:1.65}
+  .compareNote{margin-top:10px;font-size:13px;line-height:1.75;color:#8a9087}
+  .recommend{
+    display:grid;grid-template-columns:112px 1fr;gap:15px;align-items:start;
+    padding:15px 0;border-bottom:1px solid #edf0e9;
+  }
+  .recommend:last-child{border-bottom:0}
+  .recommend b{font-size:14px;color:#687062}
+  .recommend span{font-size:15px;line-height:1.78;color:#525950}
+  .resultActions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:24px}
+  .disclaimer{font-size:12px;line-height:1.75;color:#a1a69d;text-align:center;margin:18px auto 0;max-width:660px}
+  .footerQuote{text-align:center;margin:30px auto 2px;color:#71776e;font-size:14px;line-height:1.85;max-width:640px}
+
+  @media (max-width:600px){
+    .app{padding:22px 16px 38px}
+    .topbar{margin-bottom:12px}
+    .progress{width:112px}
+    .questionWrap{padding-top:2px}
+    .questionTitle{margin-top:26px;font-size:28px}
+    .option{padding:14px 12px;min-height:58px}
+    .optionText{font-size:16px}
+    .questionFooter{align-items:flex-end}
+    .hint{max-width:118px}
+    .insightGrid,.alts{grid-template-columns:1fr}
+    .barRow{grid-template-columns:68px 1fr 38px}
+    .recommend{grid-template-columns:1fr;gap:5px}
+    .resultCopy{text-align:left;font-size:17px}
+    .truthLine{font-size:16px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="kicker" id="kicker">CITY QUIZ<br>生活方式测试</div>
+      <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+    </div>
+    <div class="progressText" id="progressText">START</div>
+  </div>
+
+  <section class="screen active" id="startScreen">
+    <div class="hero">
+      <div class="kicker">FIND YOUR CITY</div>
+      <h1>你最适合<br>生活在哪座城市？</h1>
+      <div class="accentLine"></div>
+      <p>这不是在问“你喜欢哪座城市”，而是在看：你真正需要的生活节奏、关系距离、事业密度、自然感和安全感是什么。</p>
+      <div style="margin-top:34px">
+        <button class="btnPrimary" id="startBtn">开始测试</button>
+      </div>
+      <div class="meta">10 道生活场景题 · 12 座城市匹配 · 约 2 分钟<br>结果会给出城市人格、核心需求、性格矛盾与生活建议。</div>
+    </div>
+  </section>
+
+  <section class="screen" id="quizScreen">
+    <div class="questionWrap">
+      <div class="questionTitle" id="questionTitle"></div>
+      <div class="questionLine"></div>
+      <div class="options" id="options"></div>
+      <div class="questionFooter">
+        <div class="hint">不要选“应该”，选第一反应</div>
+        <div class="navBtns">
+          <button class="btnGhost" id="prevBtn" type="button">上一题</button>
+          <button class="btnPrimary" id="nextBtn" type="button">下一题</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="resultScreen" aria-live="polite">
+    <div class="result">
+      <div class="resultHeader">
+        <div class="resultLabel">YOUR CITY MATCH</div>
+        <div class="resultCity" id="resultCity"></div>
+        <div class="resultTag" id="resultTag"></div>
+        <div class="tagline" id="tagline"></div>
+        <div class="scoreRing" id="scoreRing" style="--score:90"><strong id="matchScore">90<span>%</span></strong></div>
+      </div>
+
+      <div class="keywordWrap" id="keywords"></div>
+      <div class="resultCopy" id="resultCopy"></div>
+      <div class="truthLine" id="truthLine"></div>
+
+      <div class="panel">
+        <h3 class="sectionTitle">你真正想要的生活</h3>
+        <div class="insightGrid" id="insightGrid"></div>
+      </div>
+
+      <div class="panel soft">
+        <h3 class="sectionTitle">为什么这个结果会像你</h3>
+        <div class="evidence" id="evidence"></div>
+      </div>
+
+      <div class="panel">
+        <h3 class="sectionTitle">你的城市偏好画像</h3>
+        <div class="bars" id="bars"></div>
+      </div>
+
+      <div class="panel">
+        <h3 class="sectionTitle">如果你真的住在这里</h3>
+        <div id="recommendations"></div>
+      </div>
+
+      <div class="panel soft">
+        <h3 class="sectionTitle">你也可能喜欢</h3>
+        <div class="alts" id="alts"></div>
+        <div class="compareNote" id="compareNote"></div>
+      </div>
+
+      <div class="footerQuote" id="footerQuote"></div>
+
+      <div class="resultActions">
+        <button class="btnPrimary" id="restartBtn" type="button">重新测试</button>
+      </div>
+      <div class="disclaimer">这是一份基于生活方式偏好的趣味测试，不是心理诊断，也不能替代就业、收入、房价、教育、医疗等现实决策。</div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const dims = [
+    {key:"career",name:"事业机会"},
+    {key:"relax",name:"生活松弛"},
+    {key:"nature",name:"自然环境"},
+    {key:"culture",name:"文化审美"},
+    {key:"social",name:"社交热度"},
+    {key:"convenience",name:"便利效率"}
+  ];
+  const keys = dims.map(d=>d.key);
+
+  const questions = [
+    {
+      q:"如果让你选择一种最舒服的天气，你更喜欢？",
+      options:[
+        ["四季分明，春秋舒服，偶尔下雪也不错",{nature:3,culture:1},["季节感","秩序感"]],
+        ["阳光充足，冬天也不会太冷",{nature:4,relax:2},["阳光","舒展感"]],
+        ["阴雨天也能接受，比起晒更怕热",{culture:2,relax:2},["安静","低刺激"]],
+        ["一年大部分时间温和，最好不用经历极端天气",{nature:5,relax:3},["稳定体感","舒适优先"]]
+      ]
+    },
+    {
+      q:"结束忙碌的一天后，你最理想的晚上是？",
+      options:[
+        ["去一家不错的餐厅，逛逛商场，再喝点东西",{career:2,social:3,convenience:3},["城市资源","体验密度"]],
+        ["回家窝着，点份外卖，看电影打游戏",{relax:4,convenience:2},["独处回血","低社交"]],
+        ["找几个朋友吃饭聊天，热热闹闹待到很晚",{social:5,relax:2},["人情味","陪伴感"]],
+        ["散散步、逛书店、咖啡馆，慢慢消磨时间",{culture:5,relax:3},["审美","慢节奏"]]
+      ]
+    },
+    {
+      q:"如果收入差不多，你更愿意选择哪种工作状态？",
+      options:[
+        ["机会很多、竞争很强，但成长速度快",{career:5,convenience:2},["上升空间","成长欲"]],
+        ["工作稳定，朝九晚六，下班后的时间完全属于自己",{relax:5},["边界感","生活主导权"]],
+        ["可以自由安排时间，最好还能做自己喜欢的事",{relax:4,culture:2},["自由度","自我表达"]],
+        ["忙一点没关系，但希望城市里有很多新行业和机会",{career:5,culture:1},["新机会","未来感"]]
+      ]
+    },
+    {
+      q:"周末突然空出两天，你最可能怎么安排？",
+      options:[
+        ["打卡新餐厅、新展览、新商场，城市里永远有新东西",{culture:4,convenience:3,social:1},["新鲜感","丰富度"]],
+        ["找朋友聚会、吃饭、喝酒，重点是有人一起玩",{social:5,relax:2},["关系感","热闹"]],
+        ["去郊外、爬山、露营、看湖或者看海",{nature:5,relax:2},["户外","自然回血"]],
+        ["什么都不安排，睡到自然醒，在附近慢慢晃悠",{relax:5},["松弛","不被安排"]]
+      ]
+    },
+    {
+      q:"如果可以自由选择住所附近的环境，你最希望是？",
+      options:[
+        ["地铁、商场、餐厅都在附近，去哪都方便",{convenience:5,career:1},["效率","掌控感"]],
+        ["有生活气息，楼下很多小店、小吃和菜市场",{social:3,relax:3},["烟火气","熟悉感"]],
+        ["靠近公园、江边、湖边或者山，随时可以散步",{nature:5,relax:2},["自然","低压环境"]],
+        ["有咖啡馆、书店、艺术空间和漂亮的小街区",{culture:5,relax:2},["美感","精神空间"]]
+      ]
+    },
+    {
+      q:"你更能接受下面哪一种生活成本？",
+      options:[
+        ["房租贵一点没关系，只要赚钱和发展的机会足够多",{career:5,convenience:1},["机会交换","高投入"]],
+        ["收入不用特别高，但生活成本也别给我太大压力",{relax:4},["安全边界","压力可控"]],
+        ["愿意为了更好的生活环境，多付一点钱",{nature:3,culture:2},["品质感","环境优先"]],
+        ["我比较在意性价比，希望花普通的钱也能过得舒服",{relax:5,social:1},["性价比","日常幸福"]]
+      ]
+    },
+    {
+      q:"来到一个陌生城市，你最希望这里的人是什么感觉？",
+      options:[
+        ["有边界感，大家互不打扰，办事效率高",{convenience:5,career:2},["边界感","效率"]],
+        ["热情、直接，很容易一起吃饭成为朋友",{social:5},["亲近感","社交温度"]],
+        ["松弛一点，不太卷，也不会特别在意你做什么",{relax:5},["包容","不被审视"]],
+        ["年轻、有想法，能认识很多不同圈子的人",{career:2,culture:3,social:2},["多元","连接机会"]]
+      ]
+    },
+    {
+      q:"下面哪一种城市画面最让你心动？",
+      options:[
+        ["夜晚高楼亮起灯，街上依然有人匆匆忙忙",{career:5,convenience:3},["野心","都市感"]],
+        ["老城区的小巷里全是吃的，街边永远有人聊天",{social:5,relax:3},["烟火气","热烈"]],
+        ["推开窗能看见山、水或者大片绿色",{nature:5,relax:2},["自然感","呼吸空间"]],
+        ["梧桐树、咖啡店、漂亮街道和有设计感的小店",{culture:5},["审美","城市质感"]]
+      ]
+    },
+    {
+      q:"如果一个城市只能保留一种优势，你最舍不得哪一个？",
+      options:[
+        ["工作机会和赚钱机会特别多",{career:5},["进取","资源密度"]],
+        ["好吃的特别多，而且夜生活丰富",{social:5,relax:2},["即时快乐","社交"]],
+        ["环境舒服，空气好，自然风景多",{nature:5},["舒适","自然"]],
+        ["城市有审美、有文化，平时不容易觉得无聊",{culture:5},["精神满足","审美"]]
+      ]
+    },
+    {
+      q:"假设你已经赚到了比较满意的钱，30岁以后你更想过哪种生活？",
+      options:[
+        ["继续留在大城市，认识更多人，做更大的事情",{career:5,social:2,convenience:2},["扩张","成就感"]],
+        ["找一个生活成本适中的城市，舒服地工作和生活",{relax:5},["稳态","生活优先"]],
+        ["找一个靠山靠海、气候舒服的地方长期定居",{nature:5,relax:3},["长期舒适","自然"]],
+        ["找一个有生活品质、文化氛围好，同时又不太拥挤的城市",{culture:5,relax:3},["质感","克制"]]
+      ]
+    }
+  ];
+
+  const cityProfiles = {
+    "上海":{
+      tag:"都市进阶派", tagline:"高密度机会 × 高标准生活",
+      v:[5,2,2,5,3,5], keywords:["成长欲强","审美在线","效率敏感","不甘平庸"],
+      copy:"你不是单纯喜欢“大城市”，你真正迷恋的是选择权。你希望身边的人、信息、机会和生活方式都足够丰富，让你感觉自己的人生一直可以往前走。",
+      truth:"你最怕的不是累，而是停滞。只要你觉得这份忙碌正在把自己带向更好的位置，你其实很能扛。",
+      insights:[
+        ["核心需求","需要一种“我还能继续升级”的感觉。","机会密度和自我成长，比单纯轻松更能让你安心。"],
+        ["隐藏矛盾","既想赢，也不想活得粗糙。","你很难接受只有事业没有生活，或者只有舒服却没有成长。"],
+        ["别人可能误解你","觉得你太挑、太难满足。","其实你只是对时间和人生质量的要求都很高。"],
+        ["最怕的生活","稳定，但一眼看到十年后。","真正消耗你的不是忙，而是重复、封闭和缺少可能性。"]
+      ],
+      life:["工作方式","适合目标明确、成长反馈快、能接触新资源的工作环境。"],
+      social:["关系方式","偏好有边界、彼此独立但价值观同频的人际关系。"],
+      settle:["长期定居","如果事业进入稳定期，你会更在意居住品质和通勤效率，核心区未必是唯一答案。"]
+    },
+    "深圳":{
+      tag:"高速成长派", tagline:"结果导向 × 未来感",
+      v:[5,2,3,2,3,5], keywords:["行动派","效率控","结果意识","新机会敏感"],
+      copy:"你对城市最在意的不是“有多好玩”，而是它能不能把你的能力放大。你喜欢清晰、直接、速度快的环境，也更容易在不断解决问题的过程中获得成就感。",
+      truth:"你不是没有生活感，而是很难在“还没做出成绩”的阶段彻底放松。对你来说，先把未来拿到手，才有资格谈松弛。",
+      insights:[
+        ["核心需求","看得见的成长和正反馈。","你需要知道今天的努力会换来明天更大的空间。"],
+        ["隐藏矛盾","很会冲，却不太会停。","你容易把休息理解成落后，所以真正需要学习的是节奏感。"],
+        ["别人可能误解你","觉得你功利、太现实。","其实你只是习惯用结果确认安全感。"],
+        ["最怕的生活","关系复杂、效率低、规则模糊。","你讨厌反复猜测和无效消耗。"]
+      ],
+      life:["工作方式","适合项目型、创业型、技术型、销售型等反馈快的环境。"],
+      social:["关系方式","重视靠谱、直接、守时，讨厌过度情绪拉扯。"],
+      settle:["长期定居","适合把居住舒适度和工作半径一起优化，而不是单看城市名头。"]
+    },
+    "广州":{
+      tag:"务实烟火派", tagline:"机会不丢 × 日子也要过",
+      v:[4,4,3,3,5,4], keywords:["务实","有人情味","会过日子","不爱端着"],
+      copy:"你理想的城市不是最耀眼的那个，而是能让你既有赚钱机会，也有真实生活。你重视吃饭、朋友、熟悉感和日常便利，喜欢一种不用时时证明自己的松弛。",
+      truth:"你真正想要的是“有得选，但不用一直卷”。你希望努力是为了把日子过好，而不是把生活本身牺牲掉。",
+      insights:[
+        ["核心需求","可持续的生活感。","工作要有空间，但不能吞掉你和朋友、家人、吃饭的时间。"],
+        ["隐藏矛盾","看起来随和，其实很会算长期账。","你不是佛系，只是不愿做投入产出太差的事。"],
+        ["别人可能误解你","觉得你没那么有野心。","其实你的野心更偏向“过得稳、过得好、过得久”。"],
+        ["最怕的生活","体面，但没有人情味。","对你来说，城市如果只剩效率，会变得很空。"]
+      ],
+      life:["工作方式","适合有成长但边界相对清晰、强调资源与客户连接的环境。"],
+      social:["关系方式","重视真实、熟悉、能一起吃饭的关系，不喜欢过度疏离。"],
+      settle:["长期定居","很适合考虑生活配套成熟、烟火气强的片区。"]
+    },
+    "杭州":{
+      tag:"品质事业派", tagline:"向上生长 × 生活有美感",
+      v:[5,3,4,5,3,4], keywords:["审美感","成长型","品质意识","自我要求高"],
+      copy:"你想要的不是单一的“成功”，而是一种看起来也舒服的人生。你需要事业增长，也需要自然、设计感、审美和生活秩序来维持自己的状态。",
+      truth:"你很难接受“赚到钱但活得很粗糙”。对你来说，环境和审美不是装饰，而是能量来源。",
+      insights:[
+        ["核心需求","成长和品质必须同时在线。","你愿意努力，但希望努力最终能换来更自由、更漂亮的生活。"],
+        ["隐藏矛盾","既要结果，也很吃环境。","如果身边长期杂乱、压抑，你的效率也会明显下降。"],
+        ["别人可能误解你","觉得你有点挑剔。","其实你只是很清楚什么样的环境能让自己发挥得更好。"],
+        ["最怕的生活","事业停滞，或者生活失去质感。","两者缺一，你都会觉得“不像自己”。"]
+      ],
+      life:["工作方式","适合互联网、新消费、设计、内容、品牌、创业等强调创造和成长的工作。"],
+      social:["关系方式","偏好有想法、有审美、情绪稳定的关系。"],
+      settle:["长期定居","自然资源和通勤体验会显著影响你的幸福感。"]
+    },
+    "成都":{
+      tag:"松弛生活家", tagline:"关系温度 × 日常幸福",
+      v:[3,5,3,4,5,3], keywords:["重感受","重关系","需要松弛","生活感强"],
+      copy:"你不是不想努力，而是不愿意把人生全部交给工作。比起城市有多大，你更在意吃得好、住得舒服、身边有人，生活里始终留着一点可呼吸的余地。",
+      truth:"你真正想要的不是“躺平”，而是不用为了证明自己而一直紧绷。你希望努力之后，真的能回到生活里。",
+      insights:[
+        ["核心需求","被生活接住的感觉。","有朋友、有熟悉的小店、有可以慢下来的夜晚，会让你特别有归属感。"],
+        ["隐藏矛盾","嘴上说随缘，内心其实很需要确定感。","你不爱被催，但并不喜欢长期漂着。"],
+        ["别人可能误解你","觉得你没那么拼。","其实你只是不愿为没有意义的竞争透支自己。"],
+        ["最怕的生活","每天很忙，却不知道为什么忙。","如果努力不能转化成幸福感，你会迅速失去动力。"]
+      ],
+      life:["工作方式","更适合有自主度、节奏可控、能看到生活回报的工作。"],
+      social:["关系方式","需要有温度、能聊天、能一起吃饭和分享日常的人际关系。"],
+      settle:["长期定居","你会比多数人更看重社区氛围、餐饮和“下楼就能生活”的感觉。"]
+    },
+    "重庆":{
+      tag:"热烈体验派", tagline:"强烈城市感 × 人情温度",
+      v:[3,4,4,3,5,3], keywords:["情绪浓度高","喜欢鲜活","重陪伴","有冒险感"],
+      copy:"你适合一座有性格、有记忆点的城市。你不喜欢生活被磨成一张白纸，热闹、朋友、强烈的空间体验和真实的人情味，都会让你觉得自己正在“活着”。",
+      truth:"你要的不是永远舒服，而是生活得有感觉。太平淡、太规则、太相似，反而容易让你失去兴奋感。",
+      insights:[
+        ["核心需求","生活需要浓度。","你更容易被有故事、有情绪、有强烈辨识度的环境吸引。"],
+        ["隐藏矛盾","既喜欢刺激，又需要熟悉的人。","真正适合你的不是漂泊，而是有根据地的冒险。"],
+        ["别人可能误解你","觉得你只图热闹。","其实你在意的是生命感和连接感。"],
+        ["最怕的生活","一切都很标准，但毫无记忆点。","你宁愿有一点折腾，也不想过度平。"]
+      ],
+      life:["工作方式","适合变化多、人与人连接强、能不断创造新体验的环境。"],
+      social:["关系方式","偏好直接、热情、真诚的人，关系里需要情绪回应。"],
+      settle:["长期定居","你适合有强社区感、生活半径丰富的区域。"]
+    },
+    "南京":{
+      tag:"稳定质感派", tagline:"秩序感 × 长期主义",
+      v:[4,4,4,5,3,4], keywords:["稳中求进","文化感","边界清楚","长期主义"],
+      copy:"你更偏爱一种不极端的人生：城市资源不能少，生活也不能太吵。你在意稳定、秩序和文化质感，希望自己可以慢慢积累，而不是一直被迫重启。",
+      truth:"你其实比自己想象中更看重“确定性”。你愿意成长，但最好是在一条可以长期走下去的路上。",
+      insights:[
+        ["核心需求","稳定中持续变好。","你不追求短期刺激，更相信时间带来的复利。"],
+        ["隐藏矛盾","既想保守，又不想落后。","所以你最适合的是有资源但不过度激进的环境。"],
+        ["别人可能误解你","觉得你慢热、保守。","其实你只是更谨慎地分配自己的精力。"],
+        ["最怕的生活","频繁重启、长期漂泊。","你会被缺乏归属感的生活慢慢消耗。"]
+      ],
+      life:["工作方式","适合稳定团队、专业积累、长期复利型职业。"],
+      social:["关系方式","不需要认识很多人，但重视可靠和深度。"],
+      settle:["长期定居","教育、医疗、交通和居住稳定性会显著影响你的决策。"]
+    },
+    "苏州":{
+      tag:"精致平衡派", tagline:"低噪音生活 × 稳定品质",
+      v:[3,5,4,5,2,4], keywords:["克制","审美稳定","重秩序","讨厌消耗"],
+      copy:"你很适合一种“低噪音”的生活：环境好、秩序稳、审美在线、该有的便利都有，但不需要时时置身人群中心。你更在意长期舒服，而不是短期刺激。",
+      truth:"你不是社交冷淡，只是不喜欢没有质量的热闹。比起认识很多人，你更需要少数真正舒服的关系。",
+      insights:[
+        ["核心需求","安静、稳定、可控。","你需要给自己留出恢复能量的空间。"],
+        ["隐藏矛盾","看起来淡，其实标准很高。","你不太争，但对环境和生活质量有明确底线。"],
+        ["别人可能误解你","觉得你有距离感。","其实你只是更珍惜自己的注意力。"],
+        ["最怕的生活","拥挤、嘈杂、重复被打扰。","长期高刺激会明显消耗你。"]
+      ],
+      life:["工作方式","适合专业型、稳定型、远程或边界清晰的工作。"],
+      social:["关系方式","更重深度而非数量，需要尊重空间感的关系。"],
+      settle:["长期定居","你很适合把居住环境放在比城市名气更高的位置。"]
+    },
+    "厦门":{
+      tag:"海风治愈派", tagline:"身体舒适 × 精神松弛",
+      v:[2,5,5,4,3,3], keywords:["感受型","气候敏感","重环境","需要恢复空间"],
+      copy:"你对城市的判断很“身体化”：阳光、风、空气、步行感、海边和日常节奏，都会直接影响你的情绪。你愿意用一点事业速度，换长期舒服。",
+      truth:"你不是逃避竞争，而是比别人更早意识到：状态本身就是生产力。环境不好时，你会比想象中更容易耗竭。",
+      insights:[
+        ["核心需求","身体先舒服，精神才有余裕。","自然和气候对你不是加分项，而是基础项。"],
+        ["隐藏矛盾","想自由，也怕失去成长空间。","最理想的是收入来源稳定后再换取更多生活感。"],
+        ["别人可能误解你","觉得你太追求舒服。","其实你是在保护自己的长期状态。"],
+        ["最怕的生活","长期高压、没有自然、没有喘息。","这种环境会让你迅速失去热情。"]
+      ],
+      life:["工作方式","很适合远程、自由职业、内容创作、稳定专业岗等可控节奏。"],
+      social:["关系方式","偏好轻松、不压迫、能一起散步旅行的人。"],
+      settle:["长期定居","你会比多数人更看重气候、海风、步行半径和居住采光。"]
+    },
+    "青岛":{
+      tag:"清爽平衡派", tagline:"自然感 × 城市秩序",
+      v:[3,4,5,4,3,3], keywords:["平衡型","重环境","不爱过卷","有长期感"],
+      copy:"你喜欢城市有资源，但不希望它吞掉自然和生活。海、四季、秩序感和适度的文化氛围，会让你比纯粹的繁华更有归属感。",
+      truth:"你不追求极致，只追求长期不后悔。真正适合你的选择，通常不是最刺激的那个，而是最耐住的那个。",
+      insights:[
+        ["核心需求","稳定而不无聊。","你需要一点变化，也需要足够的可预测性。"],
+        ["隐藏矛盾","既想靠近资源，又想远离消耗。","你更适合“够用但不过量”的城市密度。"],
+        ["别人可能误解你","觉得你没有明确偏好。","其实你的偏好很明确：不要极端。"],
+        ["最怕的生活","长期拥挤、节奏失控。","你更看重可持续而不是爆发。"]
+      ],
+      life:["工作方式","适合稳定发展、有专业积累、节奏中等的工作。"],
+      social:["关系方式","偏好舒服自然、不过度黏连的关系。"],
+      settle:["长期定居","自然景观和通勤之间的平衡会决定你的幸福度。"]
+    },
+    "昆明":{
+      tag:"气候自由派", tagline:"舒适体感 × 低压力生活",
+      v:[2,5,5,3,3,2], keywords:["低压需求","自然回血","重体感","自由度高"],
+      copy:"你非常重视生活本身的舒适度。相比城市名头、速度和竞争，你更愿意选择气候舒服、压力适中、自然离得近的地方。",
+      truth:"你真正想摆脱的不是工作，而是被外部节奏推着走。你需要的是自己决定今天怎么过。",
+      insights:[
+        ["核心需求","节奏掌握在自己手里。","被迫赶路会比工作量本身更消耗你。"],
+        ["隐藏矛盾","喜欢自由，但也需要稳定收入。","最理想的是先建立可迁移的赚钱能力。"],
+        ["别人可能误解你","觉得你太佛系。","其实你只是更在意人生的使用感。"],
+        ["最怕的生活","长期高压和过度比较。","你会因为“总觉得还不够”而失去幸福感。"]
+      ],
+      life:["工作方式","适合时间自主、地点灵活、压力不过度外溢的工作。"],
+      social:["关系方式","偏好包容、自然、不太讲排场的人际关系。"],
+      settle:["长期定居","气候、采光、户外空间的优先级应高于商业繁华。"]
+    },
+    "长沙":{
+      tag:"年轻烟火派", tagline:"即时快乐 × 社交参与感",
+      v:[3,4,2,3,5,4], keywords:["外向感受","爱热闹","重朋友","快乐阈值低"],
+      copy:"你适合一座让人“很容易参与进去”的城市。吃喝、朋友、夜生活、新鲜感和不太高的快乐门槛，会让你迅速建立归属。",
+      truth:"你其实很怕孤独感。再好的城市，如果每天都只是自己和工作，你也会很快觉得没意思。",
+      insights:[
+        ["核心需求","生活里要有人、有事、有回应。","你的能量很大一部分来自人与人的互动。"],
+        ["隐藏矛盾","喜欢热闹，也需要被真正理解。","你不是只要局多，而是希望关系有温度。"],
+        ["别人可能误解你","觉得你只会玩。","其实你只是很清楚快乐和关系对自己的重要性。"],
+        ["最怕的生活","下班后城市像关机一样。","你需要随时能找到一点生活的动静。"]
+      ],
+      life:["工作方式","适合人与人互动多、节奏活、反馈及时的工作。"],
+      social:["关系方式","朋友和伴侣的陪伴感会显著影响你的城市满意度。"],
+      settle:["长期定居","社区、餐饮、夜间生活半径对你非常重要。"]
+    }
+  };
+
+  const answers = new Array(questions.length).fill(null);
+  let current = 0;
+
+  const el = id => document.getElementById(id);
+  const startScreen=el("startScreen"), quizScreen=el("quizScreen"), resultScreen=el("resultScreen");
+  const progressText=el("progressText"), progressBar=el("progressBar"), questionTitle=el("questionTitle"),
+        optionsEl=el("options"), prevBtn=el("prevBtn"), nextBtn=el("nextBtn");
+
+  function showScreen(id){
+    [startScreen,quizScreen,resultScreen].forEach(s=>s.classList.remove("active"));
+    el(id).classList.add("active");
+  }
+
+  function renderQuestion(){
+    const item=questions[current];
+    questionTitle.textContent=item.q;
+    progressText.textContent=String(current+1).padStart(2,"0")+" / "+String(questions.length).padStart(2,"0");
+    progressBar.style.width=((current+1)/questions.length*100)+"%";
+    optionsEl.innerHTML="";
+    item.options.forEach((opt,idx)=>{
+      const btn=document.createElement("button");
+      btn.type="button";
+      btn.className="option"+(answers[current]===idx?" selected":"");
+      btn.innerHTML=`<span class="letter">${String.fromCharCode(65+idx)}.</span><span class="optionText">${opt[0]}</span>`;
+      btn.addEventListener("click",()=>{
+        answers[current]=idx;
+        [...optionsEl.children].forEach((n,i)=>n.classList.toggle("selected",i===idx));
+      });
+      optionsEl.appendChild(btn);
+    });
+    prevBtn.style.visibility=current===0?"hidden":"visible";
+    nextBtn.textContent=current===questions.length-1?"查看结果":"下一题";
+  }
+
+  function userVector(){
+    const raw=Object.fromEntries(keys.map(k=>[k,0]));
+    questions.forEach((q,qi)=>{
+      const a=answers[qi];
+      if(a!==null){
+        const s=q.options[a][1];
+        keys.forEach(k=>raw[k]+=s[k]||0);
+      }
+    });
+    return keys.map(k=>{
+      const localMax=questions.reduce((sum,q)=>sum+Math.max(...q.options.map(o=>o[1][k]||0)),0);
+      return 1+4*(localMax ? raw[k]/localMax : 0);
+    });
+  }
+
+  function similarity(a,b){
+    let sq=0;
+    for(let i=0;i<a.length;i++) sq+=Math.pow(a[i]-b[i],2);
+    const dist=Math.sqrt(sq);
+    return Math.max(0,1-dist/Math.sqrt(a.length*16));
+  }
+
+  function dominantTraits(uv){
+    return uv.map((v,i)=>({name:dims[i].name,key:dims[i].key,v}))
+      .sort((a,b)=>b.v-a.v);
+  }
+
+  function buildEvidence(uv){
+    const ev=[];
+    const selected=questions.map((q,i)=>({q:q.q, text:q.options[answers[i]][0], tags:q.options[answers[i]][2], score:q.options[answers[i]][1]}));
+    const trait=dominantTraits(uv);
+
+    const high=trait[0], second=trait[1], low=trait[trait.length-1];
+
+    const findByTag = (needles)=>{
+      return selected.find(s=>needles.some(n=>s.tags.includes(n)));
+    };
+
+    let e1 = findByTag(["生活主导权","松弛","舒适优先","日常幸福","稳定体感","不被安排"]);
+    let e2 = findByTag(["上升空间","成长欲","新机会","野心","资源密度","扩张","成就感"]);
+    let e3 = findByTag(["人情味","陪伴感","关系感","社交温度","亲近感","烟火气","审美","精神满足","自然回血","呼吸空间"]);
+
+    const fallback = selected.slice().sort((a,b)=>{
+      const sa=Object.values(a.score).reduce((x,y)=>x+y,0);
+      const sb=Object.values(b.score).reduce((x,y)=>x+y,0);
+      return sb-sa;
+    });
+
+    [e1,e2,e3].forEach((e,idx)=>{
+      if(!e) [e1,e2,e3][idx]=fallback[idx];
+    });
+
+    const unique=[];
+    [e1,e2,e3,...fallback].forEach(e=>{ if(e && !unique.includes(e)) unique.push(e); });
+
+    const narratives = unique.slice(0,3).map((s,i)=>{
+      if(i===0) return `你在“${s.text}”这一题上的选择，说明你会优先保护自己的${high.name}需求，而不是完全跟着主流标准走。`;
+      if(i===1) return `你对“${s.text}”的偏好，进一步强化了你对${second.name}的重视——这通常会直接影响你对一座城市的耐受度。`;
+      return `同时你并不是所有维度都要拉满。你的${low.name}需求相对没那么强，所以你更愿意为了真正重要的东西做取舍。`;
+    });
+    return narratives;
+  }
+
+  function lifeSentence(top, uv){
+    const t=dominantTraits(uv);
+    const a=t[0].name, b=t[1].name, c=t[t.length-1].name;
+    return `你的选择并不是“哪里最好”，而是“哪里最像我”。你最重视的是${a}和${b}，而对${c}的要求相对没那么绝对。`;
+  }
+
+  function showResult(){
+    const uv=userVector();
+    const ranked=Object.entries(cityProfiles)
+      .map(([city,p])=>({city,...p,sim:similarity(uv,p.v)}))
+      .sort((a,b)=>b.sim-a.sim);
+    const top=ranked[0];
+    const score=Math.max(78,Math.min(96,Math.round(77+top.sim*20)));
+
+    el("resultCity").textContent=top.city;
+    el("resultTag").textContent=top.tag;
+    el("tagline").textContent=top.tagline;
+    el("matchScore").innerHTML=score+"<span>%</span>";
+    el("scoreRing").style.setProperty("--score",score);
+    el("resultCopy").textContent=top.copy;
+    el("truthLine").textContent=top.truth;
+
+    const kws=el("keywords"); kws.innerHTML="";
+    top.keywords.forEach(k=>{
+      const s=document.createElement("span"); s.className="chip"; s.textContent=k; kws.appendChild(s);
+    });
+
+    const grid=el("insightGrid"); grid.innerHTML="";
+    top.insights.forEach(([mini,title,copy])=>{
+      const card=document.createElement("div"); card.className="insight";
+      card.innerHTML=`<div class="mini">${mini}</div><strong>${title}</strong><p>${copy}</p>`;
+      grid.appendChild(card);
+    });
+
+    const evidence=el("evidence"); evidence.innerHTML="";
+    buildEvidence(uv).forEach((txt,i)=>{
+      const item=document.createElement("div"); item.className="evidenceItem";
+      item.innerHTML=`<div class="evidenceNo">0${i+1}</div><div class="evidenceText">${txt}</div>`;
+      evidence.appendChild(item);
+    });
+
+    const bars=el("bars"); bars.innerHTML="";
+    uv.forEach((v,i)=>{
+      const pct=Math.round((v/5)*100);
+      const row=document.createElement("div"); row.className="barRow";
+      row.innerHTML=`<span>${dims[i].name}</span><div class="bar"><span style="width:${pct}%"></span></div><strong>${Math.round(v*20)}</strong>`;
+      bars.appendChild(row);
+    });
+
+    const rec=el("recommendations"); rec.innerHTML="";
+    [top.life,top.social,top.settle].forEach(pair=>{
+      const row=document.createElement("div"); row.className="recommend";
+      row.innerHTML=`<b>${pair[0]}</b><span>${pair[1]}</span>`;
+      rec.appendChild(row);
+    });
+
+    const alts=el("alts"); alts.innerHTML="";
+    ranked.slice(1,3).forEach((r,idx)=>{
+      const s=Math.max(74,Math.min(94,Math.round(73+r.sim*20)));
+      const card=document.createElement("div"); card.className="altCard";
+      card.innerHTML=`<strong>${idx===0?"第二匹配":"第三匹配"} · ${r.city}</strong><small>${r.tag} · 匹配度 ${s}%</small>`;
+      alts.appendChild(card);
+    });
+
+    const second=ranked[1], third=ranked[2];
+    el("compareNote").textContent=`${second.city}更像是你的“备选生活版本”，${third.city}则代表你身上另一部分没有完全被满足的需求。最终第一名之所以胜出，是因为它更接近你当前最优先的生活排序。`;
+    el("footerQuote").textContent=lifeSentence(top,uv);
+
+    progressText.textContent="RESULT";
+    progressBar.style.width="100%";
+    showScreen("resultScreen");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  el("startBtn").addEventListener("click",()=>{ current=0; renderQuestion(); showScreen("quizScreen"); });
+  prevBtn.addEventListener("click",()=>{ if(current>0){current--;renderQuestion();window.scrollTo({top:0,behavior:"smooth"});} });
+  nextBtn.addEventListener("click",()=>{
+    if(answers[current]===null){
+      const first=optionsEl.querySelector(".option");
+      if(first){ first.animate([{transform:"translateX(0)"},{transform:"translateX(-5px)"},{transform:"translateX(5px)"},{transform:"translateX(0)"}],{duration:250}); }
+      return;
+    }
+    if(current<questions.length-1){ current++;renderQuestion();window.scrollTo({top:0,behavior:"smooth"}); }
+    else showResult();
+  });
+  el("restartBtn").addEventListener("click",()=>{
+    answers.fill(null);current=0;progressText.textContent="START";progressBar.style.width="0";
+    showScreen("startScreen");window.scrollTo({top:0,behavior:"smooth"});
+  });
+})();
+</script>
+</body>
+</html>
